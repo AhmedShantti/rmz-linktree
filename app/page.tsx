@@ -4,6 +4,8 @@ import { Wallpaper } from "@/components/public-page/Wallpaper";
 import { Avatar } from "@/components/public-page/Avatar";
 import { LinkButton } from "@/components/public-page/LinkButton";
 import { EmptyState } from "@/components/public-page/EmptyState";
+const AVATAR_URL = "/avatar.png";
+
 
 // Owner edits in /admin should show up immediately — never statically cache this page.
 export const dynamic = "force-dynamic";
@@ -20,13 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: profile.displayName,
       description,
-      images: profile.avatarUrl ? [{ url: profile.avatarUrl }] : undefined,
+      images: [{ url: AVATAR_URL }],
     },
     twitter: {
       card: "summary",
       title: profile.displayName,
       description,
-      images: profile.avatarUrl ? [profile.avatarUrl] : undefined,
+      images: [AVATAR_URL],
     },
   };
 }
@@ -48,7 +50,7 @@ export default async function PublicPage() {
       {isDark && <Wallpaper blurPx={profile.blurPx} scrimOpacity={profile.scrimOpacity} />}
 
       <main className="flex w-full max-w-[480px] flex-1 flex-col items-center gap-5 px-6 py-14">
-        <Avatar src={profile.avatarUrl} alt={profile.displayName} />
+       <Avatar src={AVATAR_URL} alt={profile.displayName} />
 
         <div className="flex flex-col items-center gap-1 text-center">
           <h1

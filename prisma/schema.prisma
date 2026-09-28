@@ -1,0 +1,44 @@
+// RMZ Linktree — Prisma schema
+// Local dev: SQLite file at prisma/dev.db (DATABASE_URL in .env)
+// Production on Vercel: swap the datasource for a hosted LibSQL/Turso
+// database (Vercel's filesystem is ephemeral, see README).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Profile {
+  id           String   @id @default(cuid())
+  displayName  String   @default("Rebel Mind Zone")
+  bio          String?
+  avatarUrl    String?
+  theme        String   @default("dark") // "dark" | "beige"
+  blurPx       Int      @default(24)
+  scrimOpacity Float    @default(0.5)
+  accentColor  String   @default("red") // one of: red | yellow | orange | green | beige | black
+  buttonStyle  String   @default("glass") // "glass" | "beige" | "black"
+  updatedAt    DateTime @updatedAt
+}
+
+model Link {
+  id        String   @id @default(cuid())
+  type      String   @default("link") // "link" | "social" — one ordered list, rendered identically
+  title     String // for type "social", this is the platform name (e.g. "Instagram")
+  url       String
+  subtitle  String?
+  icon      String? // emoji, icon key, or uploaded thumbnail path
+  active    Boolean  @default(true)
+  featured  Boolean  @default(false)
+  order     Int      @default(0)
+  clicks    Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model PageView {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+}

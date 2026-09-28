@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { put } from "@vercel/blob";
 import { requireAdmin } from "@/lib/api-auth";
 
-// NOTE: writes to /public/uploads on the local filesystem. This works in
-// local dev but Vercel's filesystem is read-only/ephemeral in production —
-// swap this for a blob store (Vercel Blob, S3, etc.) before deploying.
 const ALLOWED_TYPES: Record<string, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
   "image/gif": "gif",
 };
-const MAX_BYTES = 5 * 1024 * 1024;
+
+const MAX_BYTES = 4 * 1024 * 1024;
 
 export async function POST(req: NextRequest) {
   const unauthorized = await requireAdmin();
@@ -32,15 +29,23 @@ export async function POST(req: NextRequest) {
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "File too large (max 5MB)" }, { status: 400 });
+    return NextResponse.json(
+      { error: "File too large (max 4MB)" },
+      { status: 400 },
+    );
   }
 
-  const uploadsDir = path.join(process.cwd(), "public", "uploads");
-  await mkdir(uploadsDir, { recursive: true });
+  try {
+    const filename = `uploads/${randomUUID()}.${ext}`;
 
-  const filename = `${randomUUID()}.${ext}`;
-  const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(path.join(uploadsDir, filename), bytes);
+    const blob = await put(filename, file, {
+      access: "public",
+      contentType: file.type,
+    });
 
-  return NextResponse.json({ url: `/uploads/${filename}` });
+    return NextResponse.json({ url: blob.url });
+  } catch (error) {
+    console.error("Upload failed:", error);
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+  }
 }
